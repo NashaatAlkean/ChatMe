@@ -1,4 +1,4 @@
-##ChatMe
+## ChatMe
 
 Real-time chat application with Angular, Spring Boot, MongoDB, Firebase Auth & WebSockets. Junior Backend Assignment featuring live messaging, user authentication, and push notifications.
 
