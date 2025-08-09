@@ -53,8 +53,8 @@ Real-time chat application with Angular, Spring Boot, MongoDB, Firebase Auth & W
 
 ### 1️⃣ Clone the Repository
 ```bash
-git clone https://github.com/NashaatAlkean/ChatMe-App.git
-cd ChatMe-App
+git clone https://github.com/NashaatAlkean/ChatMe.git
+cd ChatMe
 ```
 
 ### 2️⃣ Backend Setup
