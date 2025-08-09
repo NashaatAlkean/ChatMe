@@ -1,0 +1,18 @@
+<!-- app.html - Clean production version -->
+<div class="app-container">
+
+  <!-- Loading Indicator -->
+  <div *ngIf="isLoading" style="text-align: center; padding: 20px;">
+    <p>Loading...</p>
+  </div>
+
+  <!-- Main content when not loading -->
+  <div *ngIf="!isLoading">
+
+    <!-- Routed content -->
+    <main style="padding: 0;">
+      <router-outlet></router-outlet>
+    </main>
+
+  </div>
+</div>

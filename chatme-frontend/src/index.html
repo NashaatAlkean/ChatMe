@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>ChatMe - Real-time Chat</title>
+  <base href="/">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+
+  <!-- Fix for WebSocket libraries -->
+  <script>
+    if (typeof global === 'undefined') {
+      var global = globalThis;
+    }
+  </script>
+</head>
+<body>
+<app-root></app-root>
+
+<!-- FIXED: Load compatible SockJS and STOMP versions -->
+<script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.6.1/dist/sockjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7.0.0/bundles/stomp.umd.min.js"></script>
+
+<script>
+  // Enhanced script verification and debugging
+  window.addEventListener('load', function() {
+    console.log('🔍 WebSocket Libraries Check:');
+    console.log('✅ SockJS loaded:', typeof window.SockJS !== 'undefined');
+
+    // Check for different STOMP library exposures
+    console.log('📡 STOMP Library Detection:');
+    console.log('- window.StompJs:', typeof window.StompJs !== 'undefined');
+    console.log('- window.Stomp:', typeof window.Stomp !== 'undefined');
+    console.log('- window.StompJs.Client:', !!(window.StompJs && window.StompJs.Client));
+
+    // Ensure STOMP is available in the expected format
+    if (typeof window.StompJs !== 'undefined') {
+      if (typeof window.Stomp === 'undefined') {
+        window.Stomp = window.StompJs;
+        console.log('🔧 Mapped StompJs to window.Stomp for compatibility');
+      }
+      console.log('✅ STOMP Client available:', typeof window.StompJs.Client !== 'undefined');
+    } else if (typeof window.Stomp !== 'undefined') {
+      console.log('✅ Legacy STOMP available');
+    } else {
+      console.error('❌ No STOMP library found!');
+    }
+
+    // Verify SockJS
+    if (typeof window.SockJS === 'undefined') {
+      console.error('❌ SockJS failed to load! Check internet connection.');
+    } else {
+      console.log('✅ SockJS is ready');
+    }
+
+    // Test backend connection
+    fetch('http://localhost:8080/api/chat/health')
+      .then(response => response.json())
+      .then(data => {
+        console.log('✅ Backend health check passed:', data);
+      })
+      .catch(error => {
+        console.error('❌ Backend connection failed:', error);
+        console.log('💡 Make sure Spring Boot server is running on localhost:8080');
+      });
+
+    // Test WebSocket endpoint availability
+    console.log('🧪 Testing WebSocket endpoint availability...');
+    try {
+      const testSocket = new window.SockJS('http://localhost:8080/ws');
+      testSocket.onopen = function() {
+        console.log('✅ WebSocket endpoint is reachable');
+        testSocket.close();
+      };
+      testSocket.onerror = function(error) {
+        console.error('❌ WebSocket endpoint test failed:', error);
+        console.log('💡 Check if Spring Boot WebSocket is configured correctly');
+      };
+
+      // Close test connection after 3 seconds
+      setTimeout(() => {
+        if (testSocket.readyState === testSocket.CONNECTING || testSocket.readyState === testSocket.OPEN) {
+          testSocket.close();
+        }
+      }, 3000);
+    } catch (testError) {
+      console.error('❌ Cannot test WebSocket endpoint:', testError);
+    }
+  });
+
+  // Global error handler for WebSocket issues
+  window.addEventListener('error', function(e) {
+    if (e.message && (e.message.includes('SockJS') || e.message.includes('STOMP'))) {
+      console.error('🚨 WebSocket Error:', e.message);
+      console.log('💡 Possible solutions:');
+      console.log('  1. Check if backend is running on localhost:8080');
+      console.log('  2. Verify WebSocket endpoint /ws is available');
+      console.log('  3. Check browser console for CORS issues');
+      console.log('  4. Ensure SockJS and STOMP libraries loaded correctly');
+    }
+  });
+
+  // Add global debugging function
+  window.debugWebSocket = function() {
+    console.log('🔍 WebSocket Debug Info:');
+    console.log('- SockJS available:', !!window.SockJS);
+    console.log('- STOMP available:', !!window.Stomp || !!window.StompJs);
+    console.log('- Current URL:', window.location.href);
+
+    if (window.StompJs && window.StompJs.Client) {
+      console.log('- STOMP Client constructor available');
+    }
+
+    // Test backend
+    fetch('http://localhost:8080/api/chat/health')
+      .then(r => r.json())
+      .then(d => console.log('- Backend status:', d))
+      .catch(e => console.log('- Backend error:', e.message));
+  };
+
+  console.log('💡 Run debugWebSocket() in console for detailed debug info');
+</script>
+</body>
+</html>

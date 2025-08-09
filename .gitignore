@@ -1,0 +1,6 @@
+﻿src/main/resources/firebase-service-account-key.json
+src/main/resources/application.properties
+*.log
+target/
+node_modules/
+.idea/

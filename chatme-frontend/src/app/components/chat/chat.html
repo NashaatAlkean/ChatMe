@@ -1,0 +1,255 @@
+<div class="chat-container">
+  <!-- Header -->
+  <div class="chat-header">
+    <div class="header-content">
+      <div class="app-branding">
+        <h1><span class="chat-icon">💬</span>ChatMe</h1>
+        <span class="tagline">Real-time Chat</span>
+      </div>
+      <div class="header-status">
+        <div class="connection-badge" [class]="isConnected ? 'connected' : 'disconnected'">
+          <span class="status-dot"></span>
+          <span class="status-text">{{ isConnected ? 'Connected' : 'Disconnected' }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Error Message -->
+  @if (errorMessage) {
+  <div class="error-banner">
+    <div class="error-content">
+      <span class="error-icon">⚠️</span>
+      <span class="error-text">{{ errorMessage }}</span>
+      <button (click)="errorMessage = ''" class="error-close">✕</button>
+    </div>
+  </div>
+  }
+
+  <!-- User Connection Section -->
+  @if (!isConnected && currentUser) {
+  <div class="welcome-section">
+    <div class="welcome-card">
+      <div class="user-avatar-large">
+        <span>{{ (currentUser.displayName || currentUser.email || 'U').charAt(0).toUpperCase() }}</span>
+      </div>
+      <h2>Welcome, {{ currentUser.displayName || currentUser.email }}!</h2>
+      <p>Ready to start chatting with your friends?</p>
+      <button
+        (click)="connectToChat()"
+        [disabled]="isLoading"
+        class="connect-button">
+          <span *ngIf="!isLoading" class="button-content">
+            <span class="button-icon">🚀</span>
+            Connect to Chat
+          </span>
+        <span *ngIf="isLoading" class="button-content">
+            <span class="loading-spinner"></span>
+            Connecting...
+          </span>
+      </button>
+    </div>
+  </div>
+  }
+
+  <!-- Chat Interface -->
+  @if (isConnected) {
+  <div class="chat-interface">
+
+    <!-- User Profile Section -->
+    <div class="user-profile-section">
+      <div class="user-profile-card">
+        <div class="profile-info">
+          <div class="profile-avatar">
+            <span>{{ (currentUser?.displayName || currentUser?.email || 'U').charAt(0).toUpperCase() }}</span>
+          </div>
+          <div class="profile-details">
+            <h3>{{ currentUser?.displayName || 'User' }}</h3>
+            <p>{{ currentUser?.email }}</p>
+          </div>
+        </div>
+        <button (click)="disconnect()" class="disconnect-button">
+          <span class="disconnect-icon">🔌</span>
+          Disconnect
+        </button>
+        <button (click)="signOut()" class="signout-button">
+          <span class="signout-icon">🚪</span>
+          Sign Out
+        </button>
+      </div>
+    </div>
+
+    <!-- Chat Partner Selection -->
+    @if (!selectedUser) {
+    <div class="partner-selection">
+      <div class="selection-header">
+        <h3>Choose someone to chat with</h3>
+        <button (click)="refreshUsers()" class="refresh-button" [disabled]="loadingUsers">
+              <span *ngIf="!loadingUsers" class="refresh-content">
+                <span class="refresh-icon">🔄</span>
+                Refresh
+              </span>
+          <span *ngIf="loadingUsers" class="refresh-content">
+                <span class="loading-spinner-small"></span>
+                Loading...
+              </span>
+        </button>
+      </div>
+
+      @if (loadingUsers) {
+      <div class="users-loading">
+        <div class="loading-animation">
+          <div class="loading-dots">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+          <p>Finding your friends...</p>
+        </div>
+      </div>
+      } @else if (availableUsers.length === 0) {
+      <div class="no-users-state">
+        <div class="no-users-icon">👥</div>
+        <h4>No friends online yet</h4>
+        <p>Invite your friends to join ChatMe and start conversations!</p>
+        <button (click)="refreshUsers()" class="retry-button">
+          <span class="retry-icon">🔄</span>
+          Check Again
+        </button>
+      </div>
+      } @else {
+      <div class="users-grid">
+        @for (user of availableUsers; track user.uid) {
+        <div class="user-card" (click)="selectUser(user)">
+          <div class="user-card-avatar">
+            <img
+              [src]="getUserAvatar(user)"
+              [alt]="getUserDisplayName(user)"
+              onerror="this.src='https://ui-avatars.com/api/?name=U&background=667eea&color=fff&size=50'"
+            >
+            <div class="online-indicator"></div>
+          </div>
+          <div class="user-card-info">
+            <h4>{{ getUserDisplayName(user) }}</h4>
+            <p>{{ user.email }}</p>
+          </div>
+          <div class="chat-arrow">→</div>
+        </div>
+        }
+      </div>
+      }
+    </div>
+    }
+
+    <!-- Chat Window -->
+    @if (selectedUser) {
+    <div class="chat-window">
+
+      <!-- Chat Header -->
+      <div class="chat-window-header">
+        <div class="chat-partner-info">
+          <button (click)="goBack()" class="back-button">
+            <span class="back-icon">←</span>
+          </button>
+          <div class="partner-avatar">
+            <img
+              [src]="getUserAvatar(selectedUser)"
+              [alt]="getUserDisplayName(selectedUser)"
+              onerror="this.src='https://ui-avatars.com/api/?name=U&background=667eea&color=fff&size=32'"
+            >
+          </div>
+          <div class="partner-details">
+            <h3>{{ getUserDisplayName(selectedUser) }}</h3>
+            <span class="partner-email">{{ selectedUser.email }}</span>
+          </div>
+        </div>
+        <div class="chat-actions">
+          <div class="connection-indicator" [class]="isConnected ? 'active' : 'inactive'">
+            <span class="indicator-dot"></span>
+            <span>{{ isConnected ? 'Live' : 'Offline' }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Loading -->
+      @if (isLoading) {
+      <div class="chat-loading">
+        <div class="loading-spinner-chat"></div>
+        <p>Loading conversation...</p>
+      </div>
+      }
+
+      <!-- Messages Container -->
+      <div class="messages-container" #messagesContainer>
+        @for (message of messages; track message.id || message.timestamp) {
+        <div class="message-bubble"
+             [class.my-message]="isMyMessage(message)"
+             [class.their-message]="!isMyMessage(message)">
+
+          <div class="message-content">{{ message.message }}</div>
+
+          <div class="message-footer">
+            <span class="message-time">{{ formatTimestamp(message.timestamp || '') }}</span>
+            @if (isMyMessage(message)) {
+            <span class="message-status">✓</span>
+            }
+          </div>
+        </div>
+        }
+
+        <!-- Typing Indicator -->
+        @if (selectedUser && isUserTyping(selectedUser.uid)) {
+        <div class="typing-indicator-bubble">
+          <div class="typing-dots">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+          <span class="typing-text">{{ getUserDisplayName(selectedUser) }} is typing...</span>
+        </div>
+        }
+
+        @if (messages.length === 0 && !isLoading) {
+        <div class="empty-chat-state">
+          <div class="empty-chat-icon">💬</div>
+          <h4>Start your conversation</h4>
+          <p>Send a message to {{ getUserDisplayName(selectedUser) }} to begin chatting!</p>
+        </div>
+        }
+      </div>
+
+      <!-- Message Input -->
+      <div class="message-input-section">
+        @if (!isConnected) {
+        <div class="connection-warning">
+          <span class="warning-icon">⚠️</span>
+          Connection lost. Messages cannot be sent right now.
+        </div>
+        }
+
+        <div class="message-composer">
+              <textarea
+                [(ngModel)]="newMessage"
+                (keypress)="onKeyPress($event)"
+                (input)="onMessageInput()"
+                placeholder="Type your message to {{ getUserDisplayName(selectedUser) }}..."
+                rows="1"
+                class="message-input"
+                [disabled]="!isConnected"></textarea>
+          <button
+            (click)="sendMessage()"
+            [disabled]="!newMessage.trim() || !isConnected"
+            class="send-button">
+            <span class="send-icon">➤</span>
+          </button>
+        </div>
+
+        <div class="input-hints">
+          <span>Press Enter to send, Shift+Enter for new line</span>
+        </div>
+      </div>
+    </div>
+    }
+  </div>
+  }
+</div>
